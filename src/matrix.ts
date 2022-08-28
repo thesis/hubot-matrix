@@ -31,7 +31,7 @@ export class MatrixMessage extends TextMessage {
   }
 }
 
-class Matrix extends Adapter {
+export class Matrix extends Adapter {
   private client: MatrixClient | undefined;
   private user_id: string | undefined;
   private access_token: string | undefined;

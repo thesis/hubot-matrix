@@ -14,7 +14,7 @@ export declare class MatrixMessage extends TextMessage {
     metadata: MatrixMessageMetadata;
     constructor(user: User, text: string, id: string, metadata: MatrixMessageMetadata);
 }
-declare class Matrix extends Adapter {
+export declare class Matrix extends Adapter {
     private robot;
     private client;
     private user_id;
@@ -35,4 +35,3 @@ declare class Matrix extends Adapter {
     run(): Promise<any>;
 }
 export declare function use(robot: Robot<any>): Matrix;
-export {};

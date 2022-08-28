@@ -425,7 +425,6 @@ var MatrixMessage = /*#__PURE__*/function (_TextMessage) {
 
   return MatrixMessage;
 }(hubot.TextMessage);
-
 var Matrix = /*#__PURE__*/function (_Adapter) {
   _inheritsLoose(Matrix, _Adapter);
 
@@ -762,11 +761,11 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
 
   return Matrix;
 }(hubot.Adapter);
-
 function use(robot) {
   return new Matrix(robot);
 }
 
+exports.Matrix = Matrix;
 exports.MatrixMessage = MatrixMessage;
 exports.use = use;
 //# sourceMappingURL=matrix.cjs.development.js.map
