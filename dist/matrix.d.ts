@@ -1,4 +1,5 @@
 import { Robot, Adapter, Envelope, TextMessage, User } from "hubot";
+import { MatrixClient } from "matrix-js-sdk";
 import sdk from "matrix-js-sdk";
 import request from "request";
 /**
@@ -16,7 +17,7 @@ export declare class MatrixMessage extends TextMessage {
 }
 export declare class Matrix extends Adapter {
     private robot;
-    private client;
+    client: MatrixClient | undefined;
     private user_id;
     private access_token;
     private device_id;
