@@ -14,7 +14,7 @@ import sizeOf from "image-size";
  * The Matrix-specific metadata available about a message.
  */
 export type MatrixMessageMetadata = {
-  readonly threadId: string;
+  readonly threadId?: string;
 };
 
 /**

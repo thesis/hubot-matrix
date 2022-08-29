@@ -6,7 +6,7 @@ import request from "request";
  * The Matrix-specific metadata available about a message.
  */
 export declare type MatrixMessageMetadata = {
-    readonly threadId: string;
+    readonly threadId?: string;
 };
 /**
  * Represents a regular Hubot TextMessage with additional Matrix metadata.
