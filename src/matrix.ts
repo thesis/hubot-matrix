@@ -82,7 +82,7 @@ export class Matrix extends Adapter {
     const interpretMarkdown =
       ("metadata" in envelope.message &&
         (envelope.message as MatrixMessage).metadata.interpretMarkdown) ??
-      false;
+      true;
 
     const finalMessage = interpretMarkdown
       ? makeHtmlNotice(
