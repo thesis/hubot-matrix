@@ -7,6 +7,7 @@ import request from "request";
  */
 export declare type MatrixMessageMetadata = {
     readonly threadId?: string;
+    readonly interpretMarkdown?: boolean;
 };
 /**
  * Represents a regular Hubot TextMessage with additional Matrix metadata.
@@ -21,13 +22,15 @@ export declare class Matrix extends Adapter {
     private user_id;
     private access_token;
     private device_id;
+    private commonMarkReader;
+    private commonMarkRenderer;
     constructor(robot: Robot<Matrix>);
     handleUnknownDevices(err: {
         devices: {
             [x: string]: any;
         };
     }): (Promise<void> | undefined)[][];
-    send(envelope: Envelope, ...strings: any[]): any;
+    send(envelope: Envelope, ...strings: any[]): any[];
     sendThreaded(envelope: Envelope, threadId: string | undefined, message: string): any;
     emote(envelope: Envelope, ...strings: string[]): (Promise<sdk.ISendEventResponse | undefined> | undefined)[];
     reply(envelope: Envelope, ...strings: string[]): any[];

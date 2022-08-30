@@ -9,12 +9,15 @@ import {
 import sdk from "matrix-js-sdk";
 import request from "request";
 import sizeOf from "image-size";
+import { makeHtmlNotice, makeNotice } from "matrix-js-sdk/lib/content-helpers";
+import { Parser, HtmlRenderer } from "commonmark";
 
 /**
  * The Matrix-specific metadata available about a message.
  */
 export type MatrixMessageMetadata = {
   readonly threadId?: string;
+  readonly interpretMarkdown?: boolean;
 };
 
 /**
@@ -36,6 +39,9 @@ export class Matrix extends Adapter {
   private user_id: string | undefined;
   private access_token: string | undefined;
   private device_id: string | undefined;
+
+  private commonMarkReader = new Parser();
+  private commonMarkRenderer = new HtmlRenderer({ safe: true });
 
   constructor(private robot: Robot<Matrix>) {
     super(robot);
@@ -64,7 +70,7 @@ export class Matrix extends Adapter {
     })();
   }
 
-  send(envelope: Envelope, ...strings: any[]): any {
+  send(envelope: Envelope, ...strings: any[]) {
     return strings.map((str) => this.sendThreaded(envelope, undefined, str));
   }
 
@@ -73,26 +79,44 @@ export class Matrix extends Adapter {
     threadId: string | undefined,
     message: string
   ): any {
+    const interpretMarkdown =
+      ("metadata" in envelope.message &&
+        (envelope.message as MatrixMessage).metadata.interpretMarkdown) ??
+      false;
+
+    const finalMessage = interpretMarkdown
+      ? makeHtmlNotice(
+          message,
+          this.commonMarkRenderer.render(this.commonMarkReader.parse(message))
+        )
+      : makeNotice(message);
+
     this.robot.logger.info(`Sending to ${envelope.room}: ${message}`);
     if (/^(f|ht)tps?:\/\//i.test(message)) {
       return this.sendURL(envelope, message);
     }
     if (threadId !== undefined) {
       return this.client
-        ?.sendNotice(envelope.room, threadId, message)
+        ?.sendMessage(envelope.room, threadId, finalMessage)
         ?.catch((err) => {
           if (err.name === "UnknownDeviceError") {
             this.handleUnknownDevices(err);
-            return this.client?.sendNotice(envelope.room, threadId, message);
+            return this.client?.sendMessage(
+              envelope.room,
+              threadId,
+              finalMessage
+            );
           }
         });
     }
-    return this.client?.sendNotice(envelope.room, message).catch((err) => {
-      if (err.name === "UnknownDeviceError") {
-        this.handleUnknownDevices(err);
-        return this.client?.sendNotice(envelope.room, message);
-      }
-    });
+    return this.client
+      ?.sendMessage(envelope.room, finalMessage)
+      .catch((err) => {
+        if (err.name === "UnknownDeviceError") {
+          this.handleUnknownDevices(err);
+          return this.client?.sendMessage(envelope.room, finalMessage);
+        }
+      });
   }
 
   emote(envelope: Envelope, ...strings: string[]) {
@@ -107,7 +131,7 @@ export class Matrix extends Adapter {
   }
 
   reply(envelope: Envelope, ...strings: string[]) {
-    let threadId =
+    const threadId =
       "metadata" in envelope.message
         ? (envelope.message as MatrixMessage).metadata.threadId
         : undefined;

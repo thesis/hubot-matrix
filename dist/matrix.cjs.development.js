@@ -4,6 +4,8 @@ var hubot = require('hubot');
 var sdk = require('matrix-js-sdk');
 var request = require('request');
 var sizeOf = require('image-size');
+var contentHelpers = require('matrix-js-sdk/lib/content-helpers');
+var commonmark = require('commonmark');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -437,6 +439,10 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     _this2.user_id = void 0;
     _this2.access_token = void 0;
     _this2.device_id = void 0;
+    _this2.commonMarkReader = new commonmark.Parser();
+    _this2.commonMarkRenderer = new commonmark.HtmlRenderer({
+      safe: true
+    });
     _this2.robot = robot;
 
     _this2.robot.logger.info("Constructor");
@@ -486,9 +492,12 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
   };
 
   _proto.sendThreaded = function sendThreaded(envelope, threadId, message) {
-    var _this5 = this,
+    var _ref,
+        _this5 = this,
         _this$client2;
 
+    var interpretMarkdown = (_ref = "metadata" in envelope.message && envelope.message.metadata.interpretMarkdown) != null ? _ref : false;
+    var finalMessage = interpretMarkdown ? contentHelpers.makeHtmlNotice(message, this.commonMarkRenderer.render(this.commonMarkReader.parse(message))) : contentHelpers.makeNotice(message);
     this.robot.logger.info("Sending to " + envelope.room + ": " + message);
 
     if (/^(f|ht)tps?:\/\//i.test(message)) {
@@ -496,26 +505,26 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     }
 
     if (threadId !== undefined) {
-      var _this$client, _this$client$sendNoti;
+      var _this$client, _this$client$sendMess;
 
-      return (_this$client = this.client) == null ? void 0 : (_this$client$sendNoti = _this$client.sendNotice(envelope.room, threadId, message)) == null ? void 0 : _this$client$sendNoti["catch"](function (err) {
+      return (_this$client = this.client) == null ? void 0 : (_this$client$sendMess = _this$client.sendMessage(envelope.room, threadId, finalMessage)) == null ? void 0 : _this$client$sendMess["catch"](function (err) {
         if (err.name === "UnknownDeviceError") {
           var _this5$client;
 
           _this5.handleUnknownDevices(err);
 
-          return (_this5$client = _this5.client) == null ? void 0 : _this5$client.sendNotice(envelope.room, threadId, message);
+          return (_this5$client = _this5.client) == null ? void 0 : _this5$client.sendMessage(envelope.room, threadId, finalMessage);
         }
       });
     }
 
-    return (_this$client2 = this.client) == null ? void 0 : _this$client2.sendNotice(envelope.room, message)["catch"](function (err) {
+    return (_this$client2 = this.client) == null ? void 0 : _this$client2.sendMessage(envelope.room, finalMessage)["catch"](function (err) {
       if (err.name === "UnknownDeviceError") {
         var _this5$client2;
 
         _this5.handleUnknownDevices(err);
 
-        return (_this5$client2 = _this5.client) == null ? void 0 : _this5$client2.sendNotice(envelope.room, message);
+        return (_this5$client2 = _this5.client) == null ? void 0 : _this5$client2.sendMessage(envelope.room, finalMessage);
       }
     });
   };
@@ -723,7 +732,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }
       });
       (_this10$client8 = _this10.client) == null ? void 0 : _this10$client8.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(event, member) {
+        var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(event, member) {
           var _this10$client9;
 
           return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -750,7 +759,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }));
 
         return function (_x, _x2) {
-          return _ref.apply(this, arguments);
+          return _ref2.apply(this, arguments);
         };
       }());
       return (_this10$client10 = _this10.client) == null ? void 0 : _this10$client10.startClient({
