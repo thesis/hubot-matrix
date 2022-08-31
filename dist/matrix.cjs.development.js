@@ -493,10 +493,11 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
 
   _proto.sendThreaded = function sendThreaded(envelope, threadId, message) {
     var _ref,
+        _envelope$message,
         _this5 = this,
         _this$client2;
 
-    var interpretMarkdown = (_ref = "metadata" in envelope.message && envelope.message.metadata.interpretMarkdown) != null ? _ref : true;
+    var interpretMarkdown = (_ref = "metadata" in ((_envelope$message = envelope.message) != null ? _envelope$message : {}) && envelope.message.metadata.interpretMarkdown) != null ? _ref : true;
     var finalMessage = interpretMarkdown ? contentHelpers.makeHtmlNotice(message, this.commonMarkRenderer.render(this.commonMarkReader.parse(message))) : contentHelpers.makeNotice(message);
     this.robot.logger.info("Sending to " + envelope.room + ": " + message);
 

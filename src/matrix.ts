@@ -80,7 +80,7 @@ export class Matrix extends Adapter {
     message: string
   ): any {
     const interpretMarkdown =
-      ("metadata" in envelope.message &&
+      ("metadata" in (envelope.message ?? {}) &&
         (envelope.message as MatrixMessage).metadata.interpretMarkdown) ??
       true;
 
