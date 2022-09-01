@@ -1,21 +1,33 @@
 {
   "name": "hubot-matrix",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Matrix adapter for Hubot",
-  "main": "src/matrix.js",
-  "scripts": {
-    "test": "node --check src/*.js"
-  },
+  "main": "dist/index.js",
   "author": "David A Roberts",
   "license": "MIT",
   "dependencies": {
+    "commonmark": "^0.30.0",
     "image-size": "^0.5.1",
-    "matrix-js-sdk": "^12.1.0",
-    "node-localstorage": "^1.3.0",
+    "matrix-js-sdk": "^19.0.0",
+    "node-localstorage": "^2.2.1",
     "parent-require": "^1.0.0",
     "request": "^2.79.0"
   },
   "peerDependencies": {
     "hubot": ">=3.0"
+  },
+  "devDependencies": {
+    "@types/commonmark": "^0.27.5",
+    "@types/hubot": "^3.3.1",
+    "@types/image-size": "^0.8.0",
+    "@types/node-localstorage": "^1.3.0",
+    "@types/request": "^2.48.8",
+    "dts-cli": "^1.6.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
+  },
+  "typings": "dist/matrix.d.ts",
+  "scripts": {
+    "build": "dts build --name Matrix --entry src/matrix.ts --format cjs"
   }
 }
