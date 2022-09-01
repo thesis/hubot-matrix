@@ -492,12 +492,12 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
   };
 
   _proto.sendThreaded = function sendThreaded(envelope, threadId, message) {
-    var _ref,
-        _envelope$message,
+    var _envelope$message,
+        _envelope$message$met,
         _this5 = this,
         _this$client2;
 
-    var interpretMarkdown = (_ref = "metadata" in ((_envelope$message = envelope.message) != null ? _envelope$message : {}) && envelope.message.metadata.interpretMarkdown) != null ? _ref : true;
+    var interpretMarkdown = "metadata" in ((_envelope$message = envelope.message) != null ? _envelope$message : {}) ? (_envelope$message$met = envelope.message.metadata.interpretMarkdown) != null ? _envelope$message$met : true : true;
     var finalMessage = interpretMarkdown ? contentHelpers.makeHtmlNotice(message, this.commonMarkRenderer.render(this.commonMarkReader.parse(message))) : contentHelpers.makeNotice(message);
     this.robot.logger.info("Sending to " + envelope.room + ": " + message);
 
@@ -756,7 +756,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }
       });
       (_this10$client8 = _this10.client) == null ? void 0 : _this10$client8.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
-        var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(event, member) {
+        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(event, member) {
           var _this10$client9;
 
           return _regeneratorRuntime().wrap(function _callee2$(_context2) {
@@ -783,7 +783,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }));
 
         return function (_x3, _x4) {
-          return _ref2.apply(this, arguments);
+          return _ref.apply(this, arguments);
         };
       }());
       return (_this10$client10 = _this10.client) == null ? void 0 : _this10$client10.startClient({

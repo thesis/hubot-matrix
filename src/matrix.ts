@@ -81,9 +81,9 @@ export class Matrix extends Adapter {
     message: string
   ): Promise<ISendEventResponse | undefined> | undefined {
     const interpretMarkdown =
-      ("metadata" in (envelope.message ?? {}) &&
-        (envelope.message as MatrixMessage).metadata.interpretMarkdown) ??
-      true;
+      "metadata" in (envelope.message ?? {})
+        ? (envelope.message as MatrixMessage).metadata.interpretMarkdown ?? true
+        : true;
 
     const finalMessage = interpretMarkdown
       ? makeHtmlNotice(
