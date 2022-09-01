@@ -1,6 +1,6 @@
 {
   "name": "hubot-matrix",
-  "version": "3.0.0",
+  "version": "3.0.0-beta.0",
   "description": "Matrix adapter for Hubot",
   "main": "dist/index.js",
   "author": "David A Roberts",
