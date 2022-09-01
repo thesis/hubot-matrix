@@ -1,6 +1,7 @@
 import { Robot, Adapter, Envelope, TextMessage, User } from "hubot";
 import {
   ClientEvent,
+  ISendEventResponse,
   MatrixClient,
   RoomEvent,
   RoomMemberEvent,
@@ -78,7 +79,7 @@ export class Matrix extends Adapter {
     envelope: Envelope,
     threadId: string | undefined,
     message: string
-  ): any {
+  ): Promise<ISendEventResponse | undefined> | undefined {
     const interpretMarkdown =
       ("metadata" in (envelope.message ?? {}) &&
         (envelope.message as MatrixMessage).metadata.interpretMarkdown) ??
@@ -154,57 +155,65 @@ export class Matrix extends Adapter {
     );
   }
 
-  sendURL(envelope: Envelope, url: string) {
+  async sendURL(
+    envelope: Envelope,
+    url: string
+  ): Promise<ISendEventResponse | undefined> {
     this.robot.logger.info(`Downloading ${url}`);
-    return request({ url, encoding: null }, (error, response, body) => {
-      if (error) {
-        return this.robot.logger.info(
-          `Request error: ${JSON.stringify(error)}`
-        );
-      } else if (response.statusCode === 200) {
-        let info: sdk.IImageInfo;
-        try {
-          let dims = sizeOf(body);
-          this.robot.logger.info(
-            `Image has dimensions ${JSON.stringify(dims)}, size ${body.length}`
-          );
-          if (dims.type === "jpg") {
-            dims.type = "jpeg";
+    return new Promise((resolve, reject) => {
+      request({ url, encoding: null }, (error, response, body) => {
+        if (error) {
+          this.robot.logger.info(`Request error: ${JSON.stringify(error)}`);
+          reject(error);
+        } else if (response.statusCode === 200) {
+          let info: sdk.IImageInfo;
+          try {
+            let dims = sizeOf(body);
+            this.robot.logger.info(
+              `Image has dimensions ${JSON.stringify(dims)}, size ${
+                body.length
+              }`
+            );
+            if (dims.type === "jpg") {
+              dims.type = "jpeg";
+            }
+            info = {
+              mimetype: `image/${dims.type}`,
+              h: dims.height,
+              w: dims.width,
+              size: body.length,
+            };
+            resolve(
+              this.client
+                ?.uploadContent(body, {
+                  name: url,
+                  type: info.mimetype,
+                  rawResponse: false,
+                  onlyContentUri: true,
+                })
+                .then((content_uri) => {
+                  return this.client
+                    ?.sendImageMessage(envelope.room, content_uri, info, url)
+                    .catch((err) => {
+                      if (err.name === "UnknownDeviceError") {
+                        this.handleUnknownDevices(err);
+                        return this.client?.sendImageMessage(
+                          envelope.room,
+                          content_uri,
+                          info,
+                          url
+                        );
+                      }
+                    });
+                })
+            );
+          } catch (error1) {
+            error = error1;
+            this.robot.logger.info(error.message);
+            resolve(this.sendThreaded(envelope, undefined, ` ${url}`));
           }
-          info = {
-            mimetype: `image/${dims.type}`,
-            h: dims.height,
-            w: dims.width,
-            size: body.length,
-          };
-          return this.client
-            ?.uploadContent(body, {
-              name: url,
-              type: info.mimetype,
-              rawResponse: false,
-              onlyContentUri: true,
-            })
-            .then((content_uri) => {
-              return this.client
-                ?.sendImageMessage(envelope.room, content_uri, info, url)
-                .catch((err) => {
-                  if (err.name === "UnknownDeviceError") {
-                    this.handleUnknownDevices(err);
-                    return this.client?.sendImageMessage(
-                      envelope.room,
-                      content_uri,
-                      info,
-                      url
-                    );
-                  }
-                });
-            });
-        } catch (error1) {
-          error = error1;
-          this.robot.logger.info(error.message);
-          return this.send(envelope, ` ${url}`);
         }
-      }
+      });
     });
   }
 

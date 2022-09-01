@@ -1,7 +1,5 @@
 import { Robot, Adapter, Envelope, TextMessage, User } from "hubot";
-import { MatrixClient } from "matrix-js-sdk";
-import sdk from "matrix-js-sdk";
-import request from "request";
+import { ISendEventResponse, MatrixClient } from "matrix-js-sdk";
 /**
  * The Matrix-specific metadata available about a message.
  */
@@ -30,12 +28,12 @@ export declare class Matrix extends Adapter {
             [x: string]: any;
         };
     }): (Promise<void> | undefined)[][];
-    send(envelope: Envelope, ...strings: any[]): any[];
-    sendThreaded(envelope: Envelope, threadId: string | undefined, message: string): any;
-    emote(envelope: Envelope, ...strings: string[]): (Promise<sdk.ISendEventResponse | undefined> | undefined)[];
-    reply(envelope: Envelope, ...strings: string[]): any[];
-    topic(envelope: Envelope, ...strings: string[]): (Promise<sdk.ISendEventResponse> | undefined)[];
-    sendURL(envelope: Envelope, url: string): request.Request;
+    send(envelope: Envelope, ...strings: any[]): (Promise<ISendEventResponse | undefined> | undefined)[];
+    sendThreaded(envelope: Envelope, threadId: string | undefined, message: string): Promise<ISendEventResponse | undefined> | undefined;
+    emote(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse | undefined> | undefined)[];
+    reply(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse | undefined> | undefined)[];
+    topic(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse> | undefined)[];
+    sendURL(envelope: Envelope, url: string): Promise<ISendEventResponse | undefined>;
     run(): Promise<any>;
 }
 export declare function use(robot: Robot<any>): Matrix;

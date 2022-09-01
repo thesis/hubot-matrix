@@ -582,64 +582,87 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     });
   };
 
-  _proto.sendURL = function sendURL(envelope, url) {
-    var _this9 = this;
+  _proto.sendURL = /*#__PURE__*/function () {
+    var _sendURL = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(envelope, url) {
+      var _this9 = this;
 
-    this.robot.logger.info("Downloading " + url);
-    return request__default["default"]({
-      url: url,
-      encoding: null
-    }, function (error, response, body) {
-      if (error) {
-        return _this9.robot.logger.info("Request error: " + JSON.stringify(error));
-      } else if (response.statusCode === 200) {
-        var info;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              this.robot.logger.info("Downloading " + url);
+              return _context.abrupt("return", new Promise(function (resolve, reject) {
+                request__default["default"]({
+                  url: url,
+                  encoding: null
+                }, function (error, response, body) {
+                  if (error) {
+                    _this9.robot.logger.info("Request error: " + JSON.stringify(error));
 
-        try {
-          var _this9$client;
+                    reject(error);
+                  } else if (response.statusCode === 200) {
+                    var info;
 
-          var dims = sizeOf__default["default"](body);
+                    try {
+                      var _this9$client;
 
-          _this9.robot.logger.info("Image has dimensions " + JSON.stringify(dims) + ", size " + body.length);
+                      var dims = sizeOf__default["default"](body);
 
-          if (dims.type === "jpg") {
-            dims.type = "jpeg";
+                      _this9.robot.logger.info("Image has dimensions " + JSON.stringify(dims) + ", size " + body.length);
+
+                      if (dims.type === "jpg") {
+                        dims.type = "jpeg";
+                      }
+
+                      info = {
+                        mimetype: "image/" + dims.type,
+                        h: dims.height,
+                        w: dims.width,
+                        size: body.length
+                      };
+                      resolve((_this9$client = _this9.client) == null ? void 0 : _this9$client.uploadContent(body, {
+                        name: url,
+                        type: info.mimetype,
+                        rawResponse: false,
+                        onlyContentUri: true
+                      }).then(function (content_uri) {
+                        var _this9$client2;
+
+                        return (_this9$client2 = _this9.client) == null ? void 0 : _this9$client2.sendImageMessage(envelope.room, content_uri, info, url)["catch"](function (err) {
+                          if (err.name === "UnknownDeviceError") {
+                            var _this9$client3;
+
+                            _this9.handleUnknownDevices(err);
+
+                            return (_this9$client3 = _this9.client) == null ? void 0 : _this9$client3.sendImageMessage(envelope.room, content_uri, info, url);
+                          }
+                        });
+                      }));
+                    } catch (error1) {
+                      error = error1;
+
+                      _this9.robot.logger.info(error.message);
+
+                      resolve(_this9.sendThreaded(envelope, undefined, " " + url));
+                    }
+                  }
+                });
+              }));
+
+            case 2:
+            case "end":
+              return _context.stop();
           }
-
-          info = {
-            mimetype: "image/" + dims.type,
-            h: dims.height,
-            w: dims.width,
-            size: body.length
-          };
-          return (_this9$client = _this9.client) == null ? void 0 : _this9$client.uploadContent(body, {
-            name: url,
-            type: info.mimetype,
-            rawResponse: false,
-            onlyContentUri: true
-          }).then(function (content_uri) {
-            var _this9$client2;
-
-            return (_this9$client2 = _this9.client) == null ? void 0 : _this9$client2.sendImageMessage(envelope.room, content_uri, info, url)["catch"](function (err) {
-              if (err.name === "UnknownDeviceError") {
-                var _this9$client3;
-
-                _this9.handleUnknownDevices(err);
-
-                return (_this9$client3 = _this9.client) == null ? void 0 : _this9$client3.sendImageMessage(envelope.room, content_uri, info, url);
-              }
-            });
-          });
-        } catch (error1) {
-          error = error1;
-
-          _this9.robot.logger.info(error.message);
-
-          return _this9.send(envelope, " " + url);
         }
-      }
-    });
-  };
+      }, _callee, this);
+    }));
+
+    function sendURL(_x, _x2) {
+      return _sendURL.apply(this, arguments);
+    }
+
+    return sendURL;
+  }();
 
   _proto.run = function run() {
     var _this10 = this;
@@ -733,19 +756,19 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }
       });
       (_this10$client8 = _this10.client) == null ? void 0 : _this10$client8.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
-        var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(event, member) {
+        var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(event, member) {
           var _this10$client9;
 
-          return _regeneratorRuntime().wrap(function _callee$(_context) {
+          return _regeneratorRuntime().wrap(function _callee2$(_context2) {
             while (1) {
-              switch (_context.prev = _context.next) {
+              switch (_context2.prev = _context2.next) {
                 case 0:
                   if (!(member.membership === "invite" && member.userId === _this10.user_id)) {
-                    _context.next = 4;
+                    _context2.next = 4;
                     break;
                   }
 
-                  _context.next = 3;
+                  _context2.next = 3;
                   return (_this10$client9 = _this10.client) == null ? void 0 : _this10$client9.joinRoom(member.roomId);
 
                 case 3:
@@ -753,13 +776,13 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
 
                 case 4:
                 case "end":
-                  return _context.stop();
+                  return _context2.stop();
               }
             }
-          }, _callee);
+          }, _callee2);
         }));
 
-        return function (_x, _x2) {
+        return function (_x3, _x4) {
           return _ref2.apply(this, arguments);
         };
       }());
