@@ -75,11 +75,27 @@ export class Matrix extends Adapter {
     return strings.map((str) => this.sendThreaded(envelope, undefined, str));
   }
 
-  sendThreaded(
+  async resolveRoom(room: string): Promise<string> {
+    const roomFromId = this.client?.getRoom(room)
+    if (roomFromId !== null && roomFromId !== undefined) {
+      return room
+    }
+
+    const roomIdFromAlias = (await this.client?.getRoomIdForAlias(room))?.room_id
+    if (roomIdFromAlias === undefined) {
+      throw new Error(`Failed to resolve specified room: ${room}.`)
+    }
+
+    return roomIdFromAlias
+  }
+
+  async sendThreaded(
     envelope: Envelope,
     threadId: string | undefined,
     message: string
-  ): Promise<ISendEventResponse | undefined> | undefined {
+  ): Promise<ISendEventResponse | undefined> {
+    const resolvedRoom = await this.resolveRoom(envelope.room)
+
     const interpretMarkdown =
       "metadata" in (envelope.message ?? {})
         ? (envelope.message as MatrixMessage).metadata.interpretMarkdown ?? true
@@ -92,18 +108,18 @@ export class Matrix extends Adapter {
         )
       : makeNotice(message);
 
-    this.robot.logger.info(`Sending to ${envelope.room}: ${message}`);
+    this.robot.logger.info(`Sending to ${envelope.room} (resolved to ${resolvedRoom}): ${message}`);
     if (/^(f|ht)tps?:\/\//i.test(message)) {
       return this.sendURL(envelope, message);
     }
     if (threadId !== undefined) {
       return this.client
-        ?.sendMessage(envelope.room, threadId, finalMessage)
+        ?.sendMessage(resolvedRoom, threadId, finalMessage)
         ?.catch((err) => {
           if (err.name === "UnknownDeviceError") {
             this.handleUnknownDevices(err);
             return this.client?.sendMessage(
-              envelope.room,
+              resolvedRoom,
               threadId,
               finalMessage
             );
@@ -111,21 +127,23 @@ export class Matrix extends Adapter {
         });
     }
     return this.client
-      ?.sendMessage(envelope.room, finalMessage)
+      ?.sendMessage(resolvedRoom, finalMessage)
       .catch((err) => {
         if (err.name === "UnknownDeviceError") {
           this.handleUnknownDevices(err);
-          return this.client?.sendMessage(envelope.room, finalMessage);
+          return this.client?.sendMessage(resolvedRoom, finalMessage);
         }
       });
   }
 
-  emote(envelope: Envelope, ...strings: string[]) {
+  async emote(envelope: Envelope, ...strings: string[]) {
+    const resolvedRoom = await this.resolveRoom(envelope.room)
+
     return Array.from(strings).map((str) =>
-      this.client?.sendEmoteMessage(envelope.room, str).catch((err) => {
+      this.client?.sendEmoteMessage(resolvedRoom, str).catch((err) => {
         if (err.name === "UnknownDeviceError") {
           this.handleUnknownDevices(err);
-          return this.client?.sendEmoteMessage(envelope.room, str);
+          return this.client?.sendEmoteMessage(resolvedRoom, str);
         }
       })
     );
@@ -159,6 +177,8 @@ export class Matrix extends Adapter {
     envelope: Envelope,
     url: string
   ): Promise<ISendEventResponse | undefined> {
+    const resolvedRoom = await this.resolveRoom(envelope.room)
+
     this.robot.logger.info(`Downloading ${url}`);
     return new Promise((resolve, reject) => {
       request({ url, encoding: null }, (error, response, body) => {
@@ -193,12 +213,12 @@ export class Matrix extends Adapter {
                 })
                 .then((content_uri) => {
                   return this.client
-                    ?.sendImageMessage(envelope.room, content_uri, info, url)
+                    ?.sendImageMessage(resolvedRoom, content_uri, info, url)
                     .catch((err) => {
                       if (err.name === "UnknownDeviceError") {
                         this.handleUnknownDevices(err);
                         return this.client?.sendImageMessage(
-                          envelope.room,
+                          resolvedRoom,
                           content_uri,
                           info,
                           url
