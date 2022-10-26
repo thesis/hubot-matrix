@@ -491,66 +491,194 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     });
   };
 
-  _proto.sendThreaded = function sendThreaded(envelope, threadId, message) {
-    var _envelope$message,
-        _envelope$message$met,
-        _this5 = this,
-        _this$client2;
+  _proto.resolveRoom = /*#__PURE__*/function () {
+    var _resolveRoom = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(room) {
+      var _this$client, _yield$this$client$ge, _this$client2;
 
-    var interpretMarkdown = "metadata" in ((_envelope$message = envelope.message) != null ? _envelope$message : {}) ? (_envelope$message$met = envelope.message.metadata.interpretMarkdown) != null ? _envelope$message$met : true : true;
-    var finalMessage = interpretMarkdown ? contentHelpers.makeHtmlNotice(message, this.commonMarkRenderer.render(this.commonMarkReader.parse(message))) : contentHelpers.makeNotice(message);
-    this.robot.logger.info("Sending to " + envelope.room + ": " + message);
+      var roomFromId, roomIdFromAlias;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              roomFromId = (_this$client = this.client) == null ? void 0 : _this$client.getRoom(room);
 
-    if (/^(f|ht)tps?:\/\//i.test(message)) {
-      return this.sendURL(envelope, message);
-    }
+              if (!(roomFromId !== null && roomFromId !== undefined)) {
+                _context.next = 3;
+                break;
+              }
 
-    if (threadId !== undefined) {
-      var _this$client, _this$client$sendMess;
+              return _context.abrupt("return", room);
 
-      return (_this$client = this.client) == null ? void 0 : (_this$client$sendMess = _this$client.sendMessage(envelope.room, threadId, finalMessage)) == null ? void 0 : _this$client$sendMess["catch"](function (err) {
-        if (err.name === "UnknownDeviceError") {
-          var _this5$client;
+            case 3:
+              _context.next = 5;
+              return (_this$client2 = this.client) == null ? void 0 : _this$client2.getRoomIdForAlias(room);
 
-          _this5.handleUnknownDevices(err);
+            case 5:
+              _context.t0 = _yield$this$client$ge = _context.sent;
 
-          return (_this5$client = _this5.client) == null ? void 0 : _this5$client.sendMessage(envelope.room, threadId, finalMessage);
+              if (!(_context.t0 == null)) {
+                _context.next = 10;
+                break;
+              }
+
+              _context.t1 = void 0;
+              _context.next = 11;
+              break;
+
+            case 10:
+              _context.t1 = _yield$this$client$ge.room_id;
+
+            case 11:
+              roomIdFromAlias = _context.t1;
+
+              if (!(roomIdFromAlias === undefined)) {
+                _context.next = 14;
+                break;
+              }
+
+              throw new Error("Failed to resolve specified room: " + room + ".");
+
+            case 14:
+              return _context.abrupt("return", roomIdFromAlias);
+
+            case 15:
+            case "end":
+              return _context.stop();
+          }
         }
-      });
+      }, _callee, this);
+    }));
+
+    function resolveRoom(_x) {
+      return _resolveRoom.apply(this, arguments);
     }
 
-    return (_this$client2 = this.client) == null ? void 0 : _this$client2.sendMessage(envelope.room, finalMessage)["catch"](function (err) {
-      if (err.name === "UnknownDeviceError") {
-        var _this5$client2;
+    return resolveRoom;
+  }();
 
-        _this5.handleUnknownDevices(err);
+  _proto.sendThreaded = /*#__PURE__*/function () {
+    var _sendThreaded = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(envelope, threadId, message) {
+      var _envelope$message,
+          _envelope$message$met,
+          _this5 = this,
+          _this$client4;
 
-        return (_this5$client2 = _this5.client) == null ? void 0 : _this5$client2.sendMessage(envelope.room, finalMessage);
-      }
-    });
-  };
+      var resolvedRoom, interpretMarkdown, finalMessage, _this$client3, _this$client3$sendMes;
 
-  _proto.emote = function emote(envelope) {
-    var _this6 = this;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return this.resolveRoom(envelope.room);
 
-    for (var _len2 = arguments.length, strings = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      strings[_key2 - 1] = arguments[_key2];
-    }
+            case 2:
+              resolvedRoom = _context2.sent;
+              interpretMarkdown = "metadata" in ((_envelope$message = envelope.message) != null ? _envelope$message : {}) ? (_envelope$message$met = envelope.message.metadata.interpretMarkdown) != null ? _envelope$message$met : true : true;
+              finalMessage = interpretMarkdown ? contentHelpers.makeHtmlNotice(message, this.commonMarkRenderer.render(this.commonMarkReader.parse(message))) : contentHelpers.makeNotice(message);
+              this.robot.logger.info("Sending to " + envelope.room + " (resolved to " + resolvedRoom + "): " + message);
 
-    return Array.from(strings).map(function (str) {
-      var _this6$client;
+              if (!/^(f|ht)tps?:\/\//i.test(message)) {
+                _context2.next = 8;
+                break;
+              }
 
-      return (_this6$client = _this6.client) == null ? void 0 : _this6$client.sendEmoteMessage(envelope.room, str)["catch"](function (err) {
-        if (err.name === "UnknownDeviceError") {
-          var _this6$client2;
+              return _context2.abrupt("return", this.sendURL(envelope, message));
 
-          _this6.handleUnknownDevices(err);
+            case 8:
+              if (!(threadId !== undefined)) {
+                _context2.next = 10;
+                break;
+              }
 
-          return (_this6$client2 = _this6.client) == null ? void 0 : _this6$client2.sendEmoteMessage(envelope.room, str);
+              return _context2.abrupt("return", (_this$client3 = this.client) == null ? void 0 : (_this$client3$sendMes = _this$client3.sendMessage(resolvedRoom, threadId, finalMessage)) == null ? void 0 : _this$client3$sendMes["catch"](function (err) {
+                if (err.name === "UnknownDeviceError") {
+                  var _this5$client;
+
+                  _this5.handleUnknownDevices(err);
+
+                  return (_this5$client = _this5.client) == null ? void 0 : _this5$client.sendMessage(resolvedRoom, threadId, finalMessage);
+                }
+              }));
+
+            case 10:
+              return _context2.abrupt("return", (_this$client4 = this.client) == null ? void 0 : _this$client4.sendMessage(resolvedRoom, finalMessage)["catch"](function (err) {
+                if (err.name === "UnknownDeviceError") {
+                  var _this5$client2;
+
+                  _this5.handleUnknownDevices(err);
+
+                  return (_this5$client2 = _this5.client) == null ? void 0 : _this5$client2.sendMessage(resolvedRoom, finalMessage);
+                }
+              }));
+
+            case 11:
+            case "end":
+              return _context2.stop();
+          }
         }
-      });
-    });
-  };
+      }, _callee2, this);
+    }));
+
+    function sendThreaded(_x2, _x3, _x4) {
+      return _sendThreaded.apply(this, arguments);
+    }
+
+    return sendThreaded;
+  }();
+
+  _proto.emote = /*#__PURE__*/function () {
+    var _emote = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(envelope) {
+      var _this6 = this;
+
+      var resolvedRoom,
+          _len2,
+          strings,
+          _key2,
+          _args3 = arguments;
+
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return this.resolveRoom(envelope.room);
+
+            case 2:
+              resolvedRoom = _context3.sent;
+
+              for (_len2 = _args3.length, strings = /*#__PURE__*/new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                strings[_key2 - 1] = _args3[_key2];
+              }
+
+              return _context3.abrupt("return", Array.from(strings).map(function (str) {
+                var _this6$client;
+
+                return (_this6$client = _this6.client) == null ? void 0 : _this6$client.sendEmoteMessage(resolvedRoom, str)["catch"](function (err) {
+                  if (err.name === "UnknownDeviceError") {
+                    var _this6$client2;
+
+                    _this6.handleUnknownDevices(err);
+
+                    return (_this6$client2 = _this6.client) == null ? void 0 : _this6$client2.sendEmoteMessage(resolvedRoom, str);
+                  }
+                });
+              }));
+
+            case 5:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
+
+    function emote(_x5) {
+      return _emote.apply(this, arguments);
+    }
+
+    return emote;
+  }();
 
   _proto.reply = function reply(envelope) {
     var _this7 = this;
@@ -583,15 +711,21 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
   };
 
   _proto.sendURL = /*#__PURE__*/function () {
-    var _sendURL = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(envelope, url) {
+    var _sendURL = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(envelope, url) {
       var _this9 = this;
 
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
+      var resolvedRoom;
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
+              _context4.next = 2;
+              return this.resolveRoom(envelope.room);
+
+            case 2:
+              resolvedRoom = _context4.sent;
               this.robot.logger.info("Downloading " + url);
-              return _context.abrupt("return", new Promise(function (resolve, reject) {
+              return _context4.abrupt("return", new Promise(function (resolve, reject) {
                 request__default["default"]({
                   url: url,
                   encoding: null
@@ -628,13 +762,13 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
                       }).then(function (content_uri) {
                         var _this9$client2;
 
-                        return (_this9$client2 = _this9.client) == null ? void 0 : _this9$client2.sendImageMessage(envelope.room, content_uri, info, url)["catch"](function (err) {
+                        return (_this9$client2 = _this9.client) == null ? void 0 : _this9$client2.sendImageMessage(resolvedRoom, content_uri, info, url)["catch"](function (err) {
                           if (err.name === "UnknownDeviceError") {
                             var _this9$client3;
 
                             _this9.handleUnknownDevices(err);
 
-                            return (_this9$client3 = _this9.client) == null ? void 0 : _this9$client3.sendImageMessage(envelope.room, content_uri, info, url);
+                            return (_this9$client3 = _this9.client) == null ? void 0 : _this9$client3.sendImageMessage(resolvedRoom, content_uri, info, url);
                           }
                         });
                       }));
@@ -649,15 +783,15 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
                 });
               }));
 
-            case 2:
+            case 5:
             case "end":
-              return _context.stop();
+              return _context4.stop();
           }
         }
-      }, _callee, this);
+      }, _callee4, this);
     }));
 
-    function sendURL(_x, _x2) {
+    function sendURL(_x6, _x7) {
       return _sendURL.apply(this, arguments);
     }
 
@@ -756,19 +890,19 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
         }
       });
       (_this10$client8 = _this10.client) == null ? void 0 : _this10$client8.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(event, member) {
+        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(event, member) {
           var _this10$client9;
 
-          return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+          return _regeneratorRuntime().wrap(function _callee5$(_context5) {
             while (1) {
-              switch (_context2.prev = _context2.next) {
+              switch (_context5.prev = _context5.next) {
                 case 0:
                   if (!(member.membership === "invite" && member.userId === _this10.user_id)) {
-                    _context2.next = 4;
+                    _context5.next = 4;
                     break;
                   }
 
-                  _context2.next = 3;
+                  _context5.next = 3;
                   return (_this10$client9 = _this10.client) == null ? void 0 : _this10$client9.joinRoom(member.roomId);
 
                 case 3:
@@ -776,13 +910,13 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
 
                 case 4:
                 case "end":
-                  return _context2.stop();
+                  return _context5.stop();
               }
             }
-          }, _callee2);
+          }, _callee5);
         }));
 
-        return function (_x3, _x4) {
+        return function (_x8, _x9) {
           return _ref.apply(this, arguments);
         };
       }());

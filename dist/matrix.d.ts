@@ -28,10 +28,11 @@ export declare class Matrix extends Adapter {
             [x: string]: any;
         };
     }): (Promise<void> | undefined)[][];
-    send(envelope: Envelope, ...strings: any[]): (Promise<ISendEventResponse | undefined> | undefined)[];
-    sendThreaded(envelope: Envelope, threadId: string | undefined, message: string): Promise<ISendEventResponse | undefined> | undefined;
-    emote(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse | undefined> | undefined)[];
-    reply(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse | undefined> | undefined)[];
+    send(envelope: Envelope, ...strings: any[]): Promise<ISendEventResponse | undefined>[];
+    resolveRoom(room: string): Promise<string>;
+    sendThreaded(envelope: Envelope, threadId: string | undefined, message: string): Promise<ISendEventResponse | undefined>;
+    emote(envelope: Envelope, ...strings: string[]): Promise<(Promise<ISendEventResponse | undefined> | undefined)[]>;
+    reply(envelope: Envelope, ...strings: string[]): Promise<ISendEventResponse | undefined>[];
     topic(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse> | undefined)[];
     sendURL(envelope: Envelope, url: string): Promise<ISendEventResponse | undefined>;
     run(): Promise<any>;
