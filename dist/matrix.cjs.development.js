@@ -855,7 +855,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
       });
       (_this10$client5 = _this10.client) == null ? void 0 : _this10$client5.on(sdk.RoomEvent.Timeline, function (event, room, toStartOfTimeline) {
         if (event.getType() === "m.room.message" && toStartOfTimeline === false) {
-          var _this10$client6;
+          var _this10$client6, _room$getCanonicalAli;
 
           (_this10$client6 = _this10.client) == null ? void 0 : _this10$client6.setPresence({
             presence: "online"
@@ -866,7 +866,7 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
 
           var user = _this10.robot.brain.userForId(name);
 
-          user.room = room.roomId;
+          user.room = (_room$getCanonicalAli = room.getCanonicalAlias()) != null ? _room$getCanonicalAli : room.roomId;
 
           if (name !== _this10.user_id) {
             _this10.robot.logger.info("Received message: " + JSON.stringify(message) + " in room: " + user.room + ", from: " + user.name + " (" + user.id + ").");
