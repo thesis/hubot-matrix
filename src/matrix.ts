@@ -302,7 +302,7 @@ export class Matrix extends Adapter {
               let message = event.getContent();
               let name = event.getSender();
               let user = this.robot.brain.userForId(name);
-              user.room = room.roomId;
+              user.room = room.getCanonicalAlias() ?? room.roomId;
               if (name !== this.user_id) {
                 this.robot.logger.info(
                   `Received message: ${JSON.stringify(message)} in room: ${
