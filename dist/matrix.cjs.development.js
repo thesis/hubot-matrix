@@ -441,7 +441,8 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     _this2.device_id = void 0;
     _this2.commonMarkReader = new commonmark.Parser();
     _this2.commonMarkRenderer = new commonmark.HtmlRenderer({
-      safe: true
+      safe: true,
+      softbreak: "<br />"
     });
     _this2.robot = robot;
 
