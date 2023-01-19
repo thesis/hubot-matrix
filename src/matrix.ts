@@ -42,7 +42,7 @@ export class Matrix extends Adapter {
   private device_id: string | undefined;
 
   private commonMarkReader = new Parser();
-  private commonMarkRenderer = new HtmlRenderer({ safe: true });
+  private commonMarkRenderer = new HtmlRenderer({ safe: true, softbreak: "<br />" });
 
   constructor(private robot: Robot<Matrix>) {
     super(robot);
