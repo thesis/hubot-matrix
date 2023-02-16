@@ -35,6 +35,7 @@ export declare class Matrix extends Adapter {
     reply(envelope: Envelope, ...strings: string[]): Promise<ISendEventResponse | undefined>[];
     topic(envelope: Envelope, ...strings: string[]): (Promise<ISendEventResponse> | undefined)[];
     sendURL(envelope: Envelope, url: string): Promise<ISendEventResponse | undefined>;
-    run(): Promise<any>;
+    run(): Promise<any> | undefined;
+    access(): Promise<void>;
 }
 export declare function use(robot: Robot<any>): Matrix;
