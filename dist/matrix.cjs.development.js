@@ -803,127 +803,143 @@ var Matrix = /*#__PURE__*/function (_Adapter) {
     var _this10 = this;
 
     this.robot.logger.info("Run " + this.robot.name);
-    var client = sdk__default["default"].createClient({
-      baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
-      request: request__default["default"]
-    });
-    return client.login("m.login.password", {
-      user: process.env.HUBOT_MATRIX_USER || this.robot.name,
-      password: process.env.HUBOT_MATRIX_PASSWORD
-    }, function (err, data) {
-      var _this10$client, _this10$client5, _this10$client8, _this10$client10;
 
-      if (err) {
-        _this10.robot.logger.error(err);
-
-        return;
-      }
-
-      _this10.user_id = data.user_id;
-      _this10.access_token = data.access_token;
-      _this10.device_id = data.device_id;
-
-      _this10.robot.logger.info("Logged in " + _this10.user_id + " on device " + _this10.device_id);
-
-      _this10.client = sdk__default["default"].createClient({
+    if (process.env.HUBOT_MATRIX_ACCESS_TOKEN) {
+      this.robot.logger.info("Login by access token");
+      this.user_id = process.env.HUBOT_MATRIX_USER;
+      this.access_token = process.env.HUBOT_MATRIX_ACCESS_TOKEN;
+      this.access();
+    } else {
+      this.robot.logger.info("Login by password");
+      var client = sdk__default["default"].createClient({
         baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
-        accessToken: _this10.access_token,
-        userId: _this10.user_id,
-        deviceId: _this10.device_id,
         request: request__default["default"]
       });
-      (_this10$client = _this10.client) == null ? void 0 : _this10$client.on(sdk.ClientEvent.Sync, function (state) {
-        var _this10$client2, _this10$client3, _this10$client3$getUs, _this10$user_id;
+      return client.login("m.login.password", {
+        user: process.env.HUBOT_MATRIX_USER || this.robot.name,
+        password: process.env.HUBOT_MATRIX_PASSWORD
+      }, function (err, data) {
+        if (err) {
+          _this10.robot.logger.error(err);
 
-        switch (state) {
-          case "PREPARED":
-            _this10.robot.logger.info("Synced " + ((_this10$client2 = _this10.client) == null ? void 0 : _this10$client2.getRooms().length) + " rooms"); // We really don't want to let people set the display name to something other than the bot
-            // name because the bot only reacts to it's own name.
-
-
-            var currentDisplayName = (_this10$client3 = _this10.client) == null ? void 0 : (_this10$client3$getUs = _this10$client3.getUser((_this10$user_id = _this10.user_id) != null ? _this10$user_id : "")) == null ? void 0 : _this10$client3$getUs.displayName;
-
-            if (_this10.robot.name !== currentDisplayName) {
-              var _this10$client4;
-
-              _this10.robot.logger.info("Setting display name to " + _this10.robot.name);
-
-              (_this10$client4 = _this10.client) == null ? void 0 : _this10$client4.setDisplayName(_this10.robot.name, function () {});
-            }
-
-            return _this10.emit("connected");
+          return;
         }
+
+        _this10.user_id = data.user_id;
+        _this10.access_token = data.access_token;
+        _this10.device_id = data.device_id;
+
+        _this10.access();
       });
-      (_this10$client5 = _this10.client) == null ? void 0 : _this10$client5.on(sdk.RoomEvent.Timeline, function (event, room, toStartOfTimeline) {
-        if (event.getType() === "m.room.message" && toStartOfTimeline === false) {
-          var _this10$client6, _room$getCanonicalAli;
+    }
+  };
 
-          (_this10$client6 = _this10.client) == null ? void 0 : _this10$client6.setPresence({
-            presence: "online"
-          });
-          var id = event.getId();
-          var message = event.getContent();
-          var name = event.getSender();
+  _proto.access = function access() {
+    var _this$client5,
+        _this11 = this,
+        _this$client6,
+        _this$client7,
+        _this$client8;
 
-          var user = _this10.robot.brain.userForId(name);
+    this.robot.logger.info("Logged in " + this.user_id + " on device " + this.device_id);
+    this.client = sdk__default["default"].createClient({
+      baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
+      accessToken: this.access_token,
+      userId: this.user_id,
+      deviceId: this.device_id,
+      request: request__default["default"]
+    });
+    (_this$client5 = this.client) == null ? void 0 : _this$client5.on(sdk.ClientEvent.Sync, function (state) {
+      var _this11$client, _this11$client2, _this11$client2$getUs, _this11$user_id;
 
-          user.room = (_room$getCanonicalAli = room.getCanonicalAlias()) != null ? _room$getCanonicalAli : room.roomId;
+      switch (state) {
+        case "PREPARED":
+          _this11.robot.logger.info("Synced " + ((_this11$client = _this11.client) == null ? void 0 : _this11$client.getRooms().length) + " rooms"); // We really don't want to let people set the display name to something other than the bot
+          // name because the bot only reacts to it's own name.
 
-          if (name !== _this10.user_id) {
-            _this10.robot.logger.info("Received message: " + JSON.stringify(message) + " in room: " + user.room + ", from: " + user.name + " (" + user.id + ").");
 
-            if (message.msgtype === "m.text") {
-              var _event$threadRootId;
+          var currentDisplayName = (_this11$client2 = _this11.client) == null ? void 0 : (_this11$client2$getUs = _this11$client2.getUser((_this11$user_id = _this11.user_id) != null ? _this11$user_id : "")) == null ? void 0 : _this11$client2$getUs.displayName;
 
-              var messageThreadId = (_event$threadRootId = event.threadRootId) != null ? _event$threadRootId : id;
+          if (_this11.robot.name !== currentDisplayName) {
+            var _this11$client3;
 
-              _this10.receive(new MatrixMessage(user, message.body, id, {
-                threadId: messageThreadId
-              }));
-            }
+            _this11.robot.logger.info("Setting display name to " + _this11.robot.name);
 
-            if (message.msgtype !== "m.text" || message.body.indexOf(_this10.robot.name) !== -1) {
-              var _this10$client7;
+            (_this11$client3 = _this11.client) == null ? void 0 : _this11$client3.setDisplayName(_this11.robot.name, function () {});
+          }
 
-              return (_this10$client7 = _this10.client) == null ? void 0 : _this10$client7.sendReadReceipt(event);
-            }
+          return _this11.emit("connected");
+      }
+    });
+    (_this$client6 = this.client) == null ? void 0 : _this$client6.on(sdk.RoomEvent.Timeline, function (event, room, toStartOfTimeline) {
+      if (event.getType() === "m.room.message" && toStartOfTimeline === false) {
+        var _this11$client4, _room$getCanonicalAli;
+
+        (_this11$client4 = _this11.client) == null ? void 0 : _this11$client4.setPresence({
+          presence: "online"
+        });
+        var id = event.getId();
+        var message = event.getContent();
+        var name = event.getSender();
+
+        var user = _this11.robot.brain.userForId(name);
+
+        user.room = (_room$getCanonicalAli = room.getCanonicalAlias()) != null ? _room$getCanonicalAli : room.roomId;
+
+        if (name !== _this11.user_id) {
+          _this11.robot.logger.info("Received message: " + JSON.stringify(message) + " in room: " + user.room + ", from: " + user.name + " (" + user.id + ").");
+
+          if (message.msgtype === "m.text") {
+            var _event$threadRootId;
+
+            var messageThreadId = (_event$threadRootId = event.threadRootId) != null ? _event$threadRootId : id;
+
+            _this11.receive(new MatrixMessage(user, message.body, id, {
+              threadId: messageThreadId
+            }));
+          }
+
+          if (message.msgtype !== "m.text" || message.body.indexOf(_this11.robot.name) !== -1) {
+            var _this11$client5;
+
+            return (_this11$client5 = _this11.client) == null ? void 0 : _this11$client5.sendReadReceipt(event);
           }
         }
-      });
-      (_this10$client8 = _this10.client) == null ? void 0 : _this10$client8.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(event, member) {
-          var _this10$client9;
+      }
+    });
+    (_this$client7 = this.client) == null ? void 0 : _this$client7.on(sdk.RoomMemberEvent.Membership, /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(event, member) {
+        var _this11$client6;
 
-          return _regeneratorRuntime().wrap(function _callee5$(_context5) {
-            while (1) {
-              switch (_context5.prev = _context5.next) {
-                case 0:
-                  if (!(member.membership === "invite" && member.userId === _this10.user_id)) {
-                    _context5.next = 4;
-                    break;
-                  }
+        return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (!(member.membership === "invite" && member.userId === _this11.user_id)) {
+                  _context5.next = 4;
+                  break;
+                }
 
-                  _context5.next = 3;
-                  return (_this10$client9 = _this10.client) == null ? void 0 : _this10$client9.joinRoom(member.roomId);
+                _context5.next = 3;
+                return (_this11$client6 = _this11.client) == null ? void 0 : _this11$client6.joinRoom(member.roomId);
 
-                case 3:
-                  _this10.robot.logger.info("Auto-joined " + member.roomId);
+              case 3:
+                _this11.robot.logger.info("Auto-joined " + member.roomId);
 
-                case 4:
-                case "end":
-                  return _context5.stop();
-              }
+              case 4:
+              case "end":
+                return _context5.stop();
             }
-          }, _callee5);
-        }));
+          }
+        }, _callee5);
+      }));
 
-        return function (_x8, _x9) {
-          return _ref.apply(this, arguments);
-        };
-      }());
-      return (_this10$client10 = _this10.client) == null ? void 0 : _this10$client10.startClient({
-        initialSyncLimit: 0
-      });
+      return function (_x8, _x9) {
+        return _ref.apply(this, arguments);
+      };
+    }());
+    return (_this$client8 = this.client) == null ? void 0 : _this$client8.startClient({
+      initialSyncLimit: 0
     });
   };
 

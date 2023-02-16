@@ -239,107 +239,118 @@ export class Matrix extends Adapter {
 
   run() {
     this.robot.logger.info(`Run ${this.robot.name}`);
-    let client = sdk.createClient({
-      baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
-      request: request,
-    });
-    return client.login(
-      "m.login.password",
-      {
-        user: process.env.HUBOT_MATRIX_USER || this.robot.name,
-        password: process.env.HUBOT_MATRIX_PASSWORD,
-      },
-      (
-        err: any,
-        data: { user_id: string; access_token: string; device_id: string }
-      ) => {
-        if (err) {
-          this.robot.logger.error(err);
-          return;
-        }
-        this.user_id = data.user_id;
-        this.access_token = data.access_token;
-        this.device_id = data.device_id;
-        this.robot.logger.info(
-          `Logged in ${this.user_id} on device ${this.device_id}`
-        );
-        this.client = sdk.createClient({
-          baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
-          accessToken: this.access_token,
-          userId: this.user_id,
-          deviceId: this.device_id,
-          request,
-        });
-        this.client?.on(ClientEvent.Sync, (state) => {
-          switch (state) {
-            case "PREPARED":
-              this.robot.logger.info(
-                `Synced ${this.client?.getRooms().length} rooms`
-              );
-              // We really don't want to let people set the display name to something other than the bot
-              // name because the bot only reacts to it's own name.
-              const currentDisplayName = this.client?.getUser(
-                this.user_id ?? ""
-              )?.displayName;
-              if (this.robot.name !== currentDisplayName) {
-                this.robot.logger.info(
-                  `Setting display name to ${this.robot.name}`
-                );
-                this.client?.setDisplayName(this.robot.name, () => {});
-              }
-              return this.emit("connected");
+    if (process.env.HUBOT_MATRIX_ACCESS_TOKEN) {
+      this.robot.logger.info("Login by access token");
+      this.user_id = process.env.HUBOT_MATRIX_USER;
+      this.access_token = process.env.HUBOT_MATRIX_ACCESS_TOKEN;
+      this.access();
+    } else {
+      this.robot.logger.info("Login by password");
+      let client = sdk.createClient({
+        baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
+        request: request,
+      });
+      return client.login(
+        "m.login.password",
+        {
+          user: process.env.HUBOT_MATRIX_USER || this.robot.name,
+          password: process.env.HUBOT_MATRIX_PASSWORD,
+        },
+        (
+          err: any,
+          data: { user_id: string; access_token: string; device_id: string }
+        ) => {
+          if (err) {
+            this.robot.logger.error(err);
+            return;
           }
+          this.user_id = data.user_id;
+          this.access_token = data.access_token;
+          this.device_id = data.device_id;
+          this.access();
         });
-        this.client?.on(
-          RoomEvent.Timeline,
-          (event, room, toStartOfTimeline) => {
-            if (
-              event.getType() === "m.room.message" &&
-              toStartOfTimeline === false
-            ) {
-              this.client?.setPresence({ presence: "online" });
-              let id = event.getId();
-              let message = event.getContent();
-              let name = event.getSender();
-              let user = this.robot.brain.userForId(name);
-              user.room = room.getCanonicalAlias() ?? room.roomId;
-              if (name !== this.user_id) {
-                this.robot.logger.info(
-                  `Received message: ${JSON.stringify(message)} in room: ${
-                    user.room
-                  }, from: ${user.name} (${user.id}).`
-                );
-                if (message.msgtype === "m.text") {
-                  const messageThreadId = event.threadRootId ?? id;
+    }
+  }
 
-                  this.receive(
-                    new MatrixMessage(user, message.body, id, {
-                      threadId: messageThreadId,
-                    })
-                  );
-                }
-                if (
-                  message.msgtype !== "m.text" ||
-                  message.body.indexOf(this.robot.name) !== -1
-                ) {
-                  return this.client?.sendReadReceipt(event);
-                }
-              }
+  access() {
+    this.robot.logger.info(
+      `Logged in ${this.user_id} on device ${this.device_id}`
+    );
+    this.client = sdk.createClient({
+      baseUrl: process.env.HUBOT_MATRIX_HOST_SERVER || "https://matrix.org",
+      accessToken: this.access_token,
+      userId: this.user_id,
+      deviceId: this.device_id,
+      request,
+    });
+    this.client?.on(ClientEvent.Sync, (state) => {
+      switch (state) {
+        case "PREPARED":
+          this.robot.logger.info(
+            `Synced ${this.client?.getRooms().length} rooms`
+          );
+          // We really don't want to let people set the display name to something other than the bot
+          // name because the bot only reacts to it's own name.
+          const currentDisplayName = this.client?.getUser(
+            this.user_id ?? ""
+          )?.displayName;
+          if (this.robot.name !== currentDisplayName) {
+            this.robot.logger.info(
+              `Setting display name to ${this.robot.name}`
+            );
+            this.client?.setDisplayName(this.robot.name, () => {});
+          }
+          return this.emit("connected");
+      }
+    });
+    this.client?.on(
+      RoomEvent.Timeline,
+      (event, room, toStartOfTimeline) => {
+        if (
+          event.getType() === "m.room.message" &&
+          toStartOfTimeline === false
+        ) {
+          this.client?.setPresence({ presence: "online" });
+          let id = event.getId();
+          let message = event.getContent();
+          let name = event.getSender();
+          let user = this.robot.brain.userForId(name);
+          user.room = room.getCanonicalAlias() ?? room.roomId;
+          if (name !== this.user_id) {
+            this.robot.logger.info(
+              `Received message: ${JSON.stringify(message)} in room: ${
+                user.room
+              }, from: ${user.name} (${user.id}).`
+            );
+            if (message.msgtype === "m.text") {
+              const messageThreadId = event.threadRootId ?? id;
+
+              this.receive(
+                new MatrixMessage(user, message.body, id, {
+                  threadId: messageThreadId,
+                })
+              );
+            }
+            if (
+              message.msgtype !== "m.text" ||
+              message.body.indexOf(this.robot.name) !== -1
+            ) {
+              return this.client?.sendReadReceipt(event);
             }
           }
-        );
-        this.client?.on(RoomMemberEvent.Membership, async (event, member) => {
-          if (
-            member.membership === "invite" &&
-            member.userId === this.user_id
-          ) {
-            await this.client?.joinRoom(member.roomId);
-            this.robot.logger.info(`Auto-joined ${member.roomId}`);
-          }
-        });
-        return this.client?.startClient({ initialSyncLimit: 0 });
+        }
       }
     );
+    this.client?.on(RoomMemberEvent.Membership, async (event, member) => {
+      if (
+        member.membership === "invite" &&
+        member.userId === this.user_id
+      ) {
+        await this.client?.joinRoom(member.roomId);
+        this.robot.logger.info(`Auto-joined ${member.roomId}`);
+      }
+    });
+    return this.client?.startClient({ initialSyncLimit: 0 });
   }
 }
 
