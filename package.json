@@ -1,8 +1,9 @@
 {
   "name": "hubot-matrix",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.5",
   "description": "Matrix adapter for Hubot",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/matrix.esm.js",
   "author": "David A Roberts",
   "license": "MIT",
   "dependencies": {
@@ -14,7 +15,7 @@
     "request": "^2.79.0"
   },
   "peerDependencies": {
-    "hubot": ">=3.0"
+    "hubot": ">=4.0.0-alpha"
   },
   "devDependencies": {
     "@types/commonmark": "^0.27.5",
@@ -28,6 +29,6 @@
   },
   "typings": "dist/matrix.d.ts",
   "scripts": {
-    "build": "dts build --name Matrix --entry src/matrix.ts --format cjs"
+    "build": "dts build --name Matrix --entry src/matrix.ts --format esm --target node"
   }
 }

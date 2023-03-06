@@ -10,7 +10,7 @@ import {
 import sdk from "matrix-js-sdk";
 import request from "request";
 import sizeOf from "image-size";
-import { makeHtmlNotice, makeNotice } from "matrix-js-sdk/lib/content-helpers";
+import { makeHtmlNotice, makeNotice } from "matrix-js-sdk/lib/content-helpers.js";
 import { Parser, HtmlRenderer } from "commonmark";
 
 /**
@@ -312,7 +312,7 @@ export class Matrix extends Adapter {
                 if (message.msgtype === "m.text") {
                   const messageThreadId = event.threadRootId ?? id;
 
-                  this.receive(
+                  this.robot.receive(
                     new MatrixMessage(user, message.body, id, {
                       threadId: messageThreadId,
                     })
